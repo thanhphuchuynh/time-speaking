@@ -5,6 +5,7 @@ import Script from 'next/script'
 import { Analytics } from "@vercel/analytics/react"
 import { Donation } from '@/components/donation'
 import { Nav } from '@/components/nav'
+import { SocialShare } from '@/components/social-share'
 
 export const metadata: Metadata = {
   title: 'Learn to Speak Time in English',
@@ -17,14 +18,23 @@ export const metadata: Metadata = {
     description: 'Interactive web app to help you learn how to tell time in English',
     type: 'website',
     locale: 'en_US',
+    images: [
+      {
+        url: 'https://res.cloudinary.com/dx3qcg18h/image/upload/v1741884180/time-speak/jbstzsrvcgxzjctfvrsk.png',
+        width: 1200,
+        height: 630,
+        alt: 'Learn to Speak Time in English',
+      }
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Learn to Speak Time in English',
     description: 'Interactive web app to help you learn how to tell time in English',
+    images: ['https://res.cloudinary.com/dx3qcg18h/image/upload/v1741884180/time-speak/jbstzsrvcgxzjctfvrsk.png'],
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: 'https://res.cloudinary.com/dx3qcg18h/image/upload/v1741884180/time-speak/jd1tglsg70ghsqgtowbh.ico',
   },
 }
 
@@ -37,9 +47,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Nav />
-        <main className="pt-14">
+        <main className="pt-14 min-h-[calc(100vh-120px)]">
           {children}
         </main>
+        <footer className="py-6 border-t">
+          <div className="container mx-auto px-4 flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              &copy; {new Date().getFullYear()} Learn to Speak Time
+            </div>
+            <SocialShare />
+          </div>
+        </footer>
         <div className="fixed bottom-4 right-4 z-50">
           <Donation />
         </div>
