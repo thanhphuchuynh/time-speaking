@@ -7,7 +7,7 @@ export function Nav() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
       <div className="container flex items-center justify-between h-14">
         <Link href="/" className="font-semibold">
-          Time Speaking
+          Time Speaking Made By ThanhPhucHuynh
         </Link>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
