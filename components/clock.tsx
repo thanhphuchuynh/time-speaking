@@ -75,10 +75,10 @@ export function Clock({ hours, minutes, setHours, setMinutes }: ClockProps) {
         {/* Hour markers */}
         {[...Array(12)].map((_, i) => {
           const angle = i * 30 * (Math.PI / 180)
-          const x1 = 120 + 90 * Math.sin(angle)
-          const y1 = 120 - 90 * Math.cos(angle)
-          const x2 = 120 + 100 * Math.sin(angle)
-          const y2 = 120 - 100 * Math.cos(angle)
+          const x1 = (120 + 90 * Math.sin(angle)).toFixed(2)
+          const y1 = (120 - 90 * Math.cos(angle)).toFixed(2)
+          const x2 = (120 + 100 * Math.sin(angle)).toFixed(2)
+          const y2 = (120 - 100 * Math.cos(angle)).toFixed(2)
 
           return (
             <line
@@ -99,10 +99,10 @@ export function Clock({ hours, minutes, setHours, setMinutes }: ClockProps) {
           if (i % 5 === 0) return null
 
           const angle = i * 6 * (Math.PI / 180)
-          const x1 = 120 + 95 * Math.sin(angle)
-          const y1 = 120 - 95 * Math.cos(angle)
-          const x2 = 120 + 100 * Math.sin(angle)
-          const y2 = 120 - 100 * Math.cos(angle)
+          const x1 = (120 + 95 * Math.sin(angle)).toFixed(2)
+          const y1 = (120 - 95 * Math.cos(angle)).toFixed(2)
+          const x2 = (120 + 100 * Math.sin(angle)).toFixed(2)
+          const y2 = (120 - 100 * Math.cos(angle)).toFixed(2)
 
           return (
             <line
@@ -122,8 +122,8 @@ export function Clock({ hours, minutes, setHours, setMinutes }: ClockProps) {
         {[...Array(12)].map((_, i) => {
           const hour = i === 0 ? 12 : i
           const angle = (i * 30 - 90) * (Math.PI / 180)
-          const x = 120 + 75 * Math.cos(angle)
-          const y = 120 + 75 * Math.sin(angle)
+          const x = (120 + 75 * Math.cos(angle)).toFixed(2)
+          const y = (120 + 75 * Math.sin(angle)).toFixed(2)
 
           return (
             <text
@@ -188,4 +188,3 @@ export function Clock({ hours, minutes, setHours, setMinutes }: ClockProps) {
     </div>
   )
 }
-
