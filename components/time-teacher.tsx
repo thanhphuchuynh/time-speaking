@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Volume2, VolumeX, RefreshCw, Moon, Sun, Check } from "lucide-react"
 import { formatTimeToSpeak } from "@/lib/time-formatter"
-import { useToast } from "@/components/ui/use-toast"
 import { motion } from "framer-motion"
+import { Bounce, toast } from 'react-toastify';
 
 export default function TimeTeacher() {
   const [hours, setHours] = useState(10)
@@ -18,21 +18,56 @@ export default function TimeTeacher() {
   const [muted, setMuted] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const [isListening, setIsListening] = useState(false)
-  const { toast } = useToast()
+  const [mounted, setMounted] = useState(false)
 
-  // Handle time input changes
+  // Only run client-side code after mounting
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Load preferences from localStorage only after mounting
+  useEffect(() => {
+    if (!mounted) return
+
+    const savedFormat = localStorage.getItem('timeFormat')
+    const savedMuted = localStorage.getItem('muted')
+    const savedDark = localStorage.getItem('darkMode')
+
+    if (savedFormat && canUseFormat(savedFormat)) {
+      setFormat(savedFormat)
+    } else {
+      const autoFormat = minutes > 30 ? 'to' : minutes === 0 ? 'normal' : 'past'
+      if (canUseFormat(autoFormat)) {
+        setFormat(autoFormat)
+      }
+    }
+
+    if (savedMuted) setMuted(savedMuted === 'true')
+    if (savedDark) {
+      const isDarkMode = savedDark === 'true'
+      setIsDark(isDarkMode)
+      document.documentElement.classList.toggle('dark', isDarkMode)
+    }
+  }, [mounted, minutes])
+
+  // Save preferences to localStorage
+  useEffect(() => {
+    if (!mounted) return
+    localStorage.setItem('timeFormat', format)
+    localStorage.setItem('muted', muted.toString())
+    localStorage.setItem('darkMode', isDark.toString())
+  }, [format, muted, isDark, mounted])
+
   const handleTimeChange = (value: string) => {
     const [h, m] = value.split(":").map(Number)
     if (h >= 1 && h <= 12) setHours(h)
     if (m >= 0 && m <= 59) setMinutes(m)
   }
 
-  // Format time for input
   const formatTimeForInput = () => {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
   }
 
-  // Check if current time can be expressed in the selected format
   const canUseFormat = (format: string) => {
     if (format === "normal") return true
     if (format === "past" && minutes > 30) return false
@@ -40,40 +75,55 @@ export default function TimeTeacher() {
     return true
   }
 
-  // Handle format change
   const handleFormatChange = (newFormat: string) => {
     if (canUseFormat(newFormat)) {
       setFormat(newFormat)
     } else {
-      toast({
-        title: "Invalid Format",
-        description: `Cannot express ${formatTimeForInput()} using "${newFormat}" format`,
-        variant: "destructive",
-      })
+      toast.warn(`Cannot express ${formatTimeForInput()} using "${newFormat}" format`, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
     }
   }
 
   const speakTime = () => {
-    if (muted) return
+    if (muted || !mounted) return
 
     setIsSpeaking(true)
     const timeText = formatTimeToSpeak(hours, minutes, format)
 
-    const utterance = new SpeechSynthesisUtterance(timeText)
-    utterance.rate = 0.9
-    utterance.onend = () => setIsSpeaking(false)
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(timeText)
+      utterance.rate = 0.9
+      utterance.onend = () => setIsSpeaking(false)
 
-    window.speechSynthesis.cancel()
-    window.speechSynthesis.speak(utterance)
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(utterance)
+    }
   }
 
   const checkVoiceInput = () => {
-    if (!("webkitSpeechRecognition" in window)) {
-      toast({
-        title: "Not Supported",
-        description: "Voice recognition is not supported in your browser",
-        variant: "destructive",
-      })
+    if (!mounted) return
+
+    if (typeof window === 'undefined' || !('webkitSpeechRecognition' in window)) {
+      toast.warn(`Voice recognition is not supported in your browser`, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       return
     }
 
@@ -93,23 +143,33 @@ export default function TimeTeacher() {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript.toLowerCase()
       const expectedTime = formatTimeToSpeak(hours, minutes, format).toLowerCase()
-
       if (
         transcript.includes(expectedTime) ||
         transcript.replace(/[^a-z0-9]/g, "") === expectedTime.replace(/[^a-z0-9]/g, "")
       ) {
-        toast({
-          title: "Correct!",
-          description: "Your pronunciation was correct",
-          variant: "default",
-          className: "bg-green-500 text-white",
-        })
+        toast.success('Correct! Your pronunciation was correct', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        });
       } else {
-        toast({
-          title: "Try Again",
-          description: `Expected: "${expectedTime}"\nYou said: "${transcript}"`,
-          variant: "destructive",
-        })
+        toast.error(`Expected: "${expectedTime}"\nYou said: "${transcript}"`, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        });
       }
     }
 
@@ -117,6 +177,7 @@ export default function TimeTeacher() {
   }
 
   const toggleDarkMode = () => {
+    if (!mounted) return
     setIsDark(!isDark)
     document.documentElement.classList.toggle("dark")
   }
@@ -128,9 +189,15 @@ export default function TimeTeacher() {
 
   useEffect(() => {
     return () => {
-      window.speechSynthesis.cancel()
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel()
+      }
     }
   }, [])
+
+  if (!mounted) {
+    return null // Prevent hydration mismatch by not rendering until mounted
+  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 md:p-8">
@@ -146,80 +213,53 @@ export default function TimeTeacher() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="mb-6"
           >
             <Clock hours={hours} minutes={minutes} setHours={setHours} setMinutes={setMinutes} />
           </motion.div>
 
-          <div className="flex gap-4 mt-4">
-            <Button onClick={randomizeTime} variant="outline" size="icon" className="rounded-full">
-              <RefreshCw className="h-5 w-5" />
-              <span className="sr-only">Randomize Time</span>
-            </Button>
-
-            <Button onClick={() => setMuted(!muted)} variant="outline" size="icon" className="rounded-full">
-              {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-              <span className="sr-only">Toggle Sound</span>
+          <div className="mt-4 flex gap-2">
+            <Input
+              type="time"
+              value={formatTimeForInput()}
+              onChange={(e) => handleTimeChange(e.target.value)}
+              className="w-32"
+            />
+            <Button variant="outline" size="icon" onClick={randomizeTime}>
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Time Speaking Practice</h2>
-
-          <Input
-            type="time"
-            value={formatTimeForInput()}
-            onChange={(e) => handleTimeChange(e.target.value)}
-            className="text-3xl font-mono mb-6 text-center py-4 bg-gray-100 dark:bg-gray-700"
-          />
-
-          <Tabs defaultValue="normal" className="mb-6" onValueChange={handleFormatChange}>
-            <TabsList className="grid grid-cols-3 mb-4">
+        <div className="flex flex-col gap-4">
+          <Tabs value={format} onValueChange={handleFormatChange}>
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="normal">Normal</TabsTrigger>
-              <TabsTrigger value="past" disabled={!canUseFormat("past")}>
-                Using "Past"
-              </TabsTrigger>
-              <TabsTrigger value="to" disabled={!canUseFormat("to")}>
-                Using "To"
-              </TabsTrigger>
+              <TabsTrigger value="past">Past</TabsTrigger>
+              <TabsTrigger value="to">To</TabsTrigger>
             </TabsList>
-            <TabsContent value="normal" className="text-gray-600 dark:text-gray-300">
-              The standard way to tell time using "o'clock", "fifteen", "thirty", etc.
-            </TabsContent>
-            <TabsContent value="past" className="text-gray-600 dark:text-gray-300">
-              Using "past" to describe minutes after the hour (e.g., "quarter past five").
-            </TabsContent>
-            <TabsContent value="to" className="text-gray-600 dark:text-gray-300">
-              Using "to" to describe minutes before the next hour (e.g., "ten to six").
-            </TabsContent>
           </Tabs>
 
-          <div className="flex gap-4 mb-6">
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button onClick={speakTime} className="w-full py-6 text-lg" disabled={isSpeaking || muted}>
-                {isSpeaking ? "Speaking..." : "Speak This Time"}
-              </Button>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={checkVoiceInput}
-                variant="outline"
-                className="h-full aspect-square"
-                disabled={isListening}
-              >
-                <Check className="h-5 w-5" />
-              </Button>
-            </motion.div>
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={speakTime} disabled={isSpeaking}>
+              {isSpeaking ? "Speaking..." : "Speak Time"}
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => setMuted(!muted)}>
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
           </div>
 
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-            <p className="text-gray-700 dark:text-gray-300">{formatTimeToSpeak(hours, minutes, format)}</p>
-          </div>
+          <Button onClick={checkVoiceInput} disabled={isListening}>
+            {isListening ? (
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                Listening...
+              </span>
+            ) : (
+              "Check My Pronunciation"
+            )}
+          </Button>
         </div>
       </div>
     </div>
   )
 }
-
