@@ -81,8 +81,23 @@ export function Donation() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      {content}
-    </Card>
+    <div className="fixed bottom-4 right-4 z-50">
+      {isOpen ? (
+        <Card className="w-full max-w-md">
+          <div className="absolute right-2 top-2 cursor-pointer" onClick={() => setIsOpen(false)}>
+            <ChevronDown className="h-5 w-5" />
+          </div>
+          {content}
+        </Card>
+      ) : (
+        <Button 
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-2"
+        >
+          Support Time Speaking
+          <ChevronUp className="h-5 w-5" />
+        </Button>
+      )}
+    </div>
   );
 }
